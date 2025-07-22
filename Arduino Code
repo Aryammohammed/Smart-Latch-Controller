@@ -1,0 +1,42 @@
+
+const int buttonPin = 2;       // Push button
+const int sensorPin = 3;       // PIR motion sensor
+const int latchPin = 5;        // Transistor control
+const int indicatorLED = 13;   // LED status indicator
+
+unsigned long lastDetectedTime = 0;
+const unsigned long timeout = 30000; // Shutdown time (30 seconds)
+
+bool systemOn = false;
+
+void setup() {
+  pinMode(buttonPin, INPUT_PULLUP);
+  pinMode(sensorPin, INPUT);
+  pinMode(latchPin, OUTPUT);
+  pinMode(indicatorLED, OUTPUT);
+
+  digitalWrite(latchPin, LOW);
+  digitalWrite(indicatorLED, LOW);
+}
+
+void loop() {
+  if (digitalRead(buttonPin) == LOW && !systemOn) {
+    systemOn = true;
+    digitalWrite(latchPin, HIGH);
+    digitalWrite(indicatorLED, HIGH);
+    lastDetectedTime = millis();
+    delay(300); // Debounce
+  }
+
+  if (systemOn) {
+    if (digitalRead(sensorPin) == HIGH) {
+      lastDetectedTime = millis(); // Reset timer on motion
+    }
+
+    if (millis() - lastDetectedTime > timeout) {
+      digitalWrite(latchPin, LOW);
+      digitalWrite(indicatorLED, LOW);
+      systemOn = false;
+    }
+  }
+}
